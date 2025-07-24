@@ -1,0 +1,45 @@
+# chunk:
+#   size: 1000
+#   overlap: 500
+# embedding:
+#   model: /Users/nimishgupta/Documents/rag_doc/models/all-MiniLM-L6-v2
+# faiss:
+#   index_path: embeddings/faiss_index
+# llm:
+#   model: llama3
+#   mode: ollama
+# relevance_model:
+#   path: models/relevance_model.pkl
+# cache:
+#   db_path: cache/query_cache.db
+# source_dir: data/raw_pdfs
+# chunks_dir: data/chunks
+# cleaned_texts_dir: data/cleaned_texts
+# metadata_dir: data/metadata
+
+
+
+chunk:
+  size: 1000
+  overlap: 500
+embedding:
+  model: all-MiniLM-L6-v2
+  model_path: sentence_transformers/all-MiniLM-L6-v2
+faiss:
+  index_path: embeddings/faiss_index
+llm:
+  model: llama3
+  mode: ollama
+relevance_model:
+  path: models/relevance_model.pkl
+cache:
+  db_path: cache/query_cache.db
+source_dir: data/raw_pdfs
+chunks_dir: data/chunks
+cleaned_texts_dir: data/cleaned_texts
+metadata_dir: data/metadata
+nltk:
+  data_path: nltk_data
+spacy:
+  model: en_core_web_sm
+  model_path: spacy_data/en_core_web_sm
