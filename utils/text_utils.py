@@ -76,7 +76,14 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-nltk.data.path.append("/Users/nimishgupta/Documents/rag_doc/nltk_data")
+import logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+from pathlib import Path
+import nltk
+
+# Append local nltk_data directory using relative path
+nltk_data_path = Path("nltk_data").resolve()
+nltk.data.path.append(str(nltk_data_path))
 
 def clean_text(text):
     """

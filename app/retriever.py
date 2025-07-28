@@ -332,7 +332,7 @@
 
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = "/Users/nimishgupta/Documents/rag_doc/models"
+os.environ["HF_HOME"] = r"C:\Users\nimish.gupta\OneDrive - ION\Desktop\rag_doc\models"
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 from sentence_transformers import SentenceTransformer
@@ -348,6 +348,9 @@ class Retriever:
         logging.debug(f"Initializing Retriever with model: {model_name}, index_path: {index_path}")
         try:
             self.model = SentenceTransformer(model_name, local_files_only=True)
+            #change
+            self.model = self.model.to("cpu")
+            self.model.encode(["warmup"], convert_to_tensor=True)
             logging.debug("SentenceTransformer loaded successfully")
         except Exception as e:
             logging.error(f"Failed to load SentenceTransformer: {e}")

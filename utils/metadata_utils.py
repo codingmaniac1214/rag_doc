@@ -1,5 +1,7 @@
 import re
 import os
+import logging
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 from utils.text_utils import get_keyword_frequency
 
 def extract_metadata(text, pdf_path):

@@ -1,6 +1,10 @@
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = "/Users/nimishgupta/Documents/rag_doc/models"
+from pathlib import Path
+import os
+
+# Set HF_HOME using a relative path to the models/ folder
+os.environ["HF_HOME"] = str(Path("models").resolve())
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 import xgboost as xgb

@@ -1,6 +1,7 @@
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = "/Users/nimishgupta/Documents/rag_doc/models"
+from pathlib import path
+os.environ["HF_HOME"] = str(Path("models").resolve())
 import json
 import faiss
 import numpy as np

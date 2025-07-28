@@ -62,8 +62,9 @@
 #             preprocess_pdf(pdf_path, output_dir, metadata_dir)
 
 import os
+from pathlib import Path
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = "/Users/nimishgupta/Documents/rag_doc/models"
+os.environ["HF_HOME"] = str(Path("models").resolve())
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 from sentence_transformers import SentenceTransformer
@@ -747,7 +748,7 @@ from utils.metadata_utils import extract_metadata
 
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = "/Users/nimishgupta/Documents/rag_doc/models"
+os.environ["HF_HOME"] = str(Path("models").resolve())
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 from sentence_transformers import SentenceTransformer
@@ -762,7 +763,8 @@ from utils.config_loader import load_config
 from utils.text_utils import clean_text
 from utils.metadata_utils import extract_metadata
 import nltk
-nltk.data.path.append("/Users/nimishgupta/Documents/rag_doc/nltk_data")
+nltk_data_path = Path("nltk_data").resolve()
+nltk.data.path.append(str(nltk_data_path))
 
 def preprocess_file(file_path, text_dir, metadata_dir, chunks_dir, chunk_size, chunk_overlap):
     """

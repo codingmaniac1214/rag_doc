@@ -1,7 +1,7 @@
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = "/Users/nimishgupta/Documents/rag_doc/models"
-import logging
+from pathlib import Path
+os.environ["HF_HOME"] = str(Path("models").resolve())import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 import spacy
 from utils.text_utils import clean_text, get_keyword_frequency
