@@ -1172,7 +1172,19 @@ def preprocess_file(file_path, text_dir, metadata_dir, chunks_dir, chunk_size, c
 
        # Generate embeddings
        config = load_config('config.yaml')
-       model = SentenceTransformer(config['embedding']['model'], local_files_only=True)
+    #    model = SentenceTransformer(config['embedding']['model'], local_files_only=True)
+    #    changed----------------------------------------------
+       try:
+            # Load model directly onto CPU to avoid meta tensor issues
+            model = SentenceTransformer(config['embedding']['model'], device='cpu', local_files_only=True)
+
+            # Warmup call to force full model instantiation
+            _ = model.encode(["warmup"], convert_to_tensor=True, show_progress_bar=False)
+
+       except Exception as e:
+            logging.error(f"Failed to load SentenceTransformer: {e}")
+            raise
+       #    -----------------------------------------------------------
        embeddings = model.encode(chunks, show_progress_bar=True)
        embeddings = np.array(embeddings).astype('float32')
 

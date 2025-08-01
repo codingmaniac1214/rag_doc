@@ -457,12 +457,26 @@ from sklearn.metrics.pairwise import cosine_similarity
 class Retriever:
    def __init__(self, model_name, index_path, relevance_model_path=None):
        logging.debug(f"Initializing Retriever with model: {model_name}, index_path: {index_path}")
+    #    try:
+    #        self.model = SentenceTransformer(model_name, local_files_only=True)
+    #        logging.debug("SentenceTransformer loaded successfully")
+    #    except Exception as e:
+    #        logging.error(f"Failed to load SentenceTransformer: {e}")
+    #        raise
+
+        #changed--------------------------------------------------------------
        try:
-           self.model = SentenceTransformer(model_name, local_files_only=True)
-           logging.debug("SentenceTransformer loaded successfully")
+            # Load model directly onto CPU and force full loading
+            self.model = SentenceTransformer(model_name, device='cpu', local_files_only=True)
+
+            # Warmup call to ensure weights are loaded (prevents meta tensor issues)
+            _ = self.model.encode(["warmup"], convert_to_tensor=True, show_progress_bar=False)
+
+            logging.debug("SentenceTransformer loaded and warmed up successfully")
        except Exception as e:
-           logging.error(f"Failed to load SentenceTransformer: {e}")
-           raise
+            logging.error(f"Failed to load SentenceTransformer: {e}")
+            raise
+    #----------------------------------------------------------------------
       
        self.index_path = index_path
        try:
