@@ -469,8 +469,6 @@ class Retriever:
             # Load model directly onto CPU and force full loading
             self.model = SentenceTransformer(model_name, local_files_only=True)
 
-            self.model.to(torch.device("cpu"))
-
             # Warmup call to ensure weights are loaded (prevents meta tensor issues)
             _ = self.model.encode(["warmup"], convert_to_tensor=True, show_progress_bar=False)
 

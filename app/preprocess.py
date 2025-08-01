@@ -1178,8 +1178,6 @@ def preprocess_file(file_path, text_dir, metadata_dir, chunks_dir, chunk_size, c
             # Load model directly onto CPU to avoid meta tensor issues
             model = SentenceTransformer(config['embedding']['model'], local_files_only=True)
 
-            model = model.to(torch.device('cpu'))
-
             # Warmup call to force full model instantiation
             _ = model.encode(["warmup"], convert_to_tensor=True, show_progress_bar=False)
 
