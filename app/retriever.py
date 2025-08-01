@@ -442,14 +442,14 @@
 
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_HOME"] = r"C:\Users\nimish.gupta\OneDrive - ION\Desktop\rag_doc\models"
+from pathlib import Path
+os.environ["HF_HOME"] = str(Path("models").resolve())
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s", filename="log.log")
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 import json
-from pathlib import Path
 from utils.text_utils import get_keyword_frequency, extract_keywords
 from sklearn.metrics.pairwise import cosine_similarity
 
