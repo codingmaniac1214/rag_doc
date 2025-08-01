@@ -329,12 +329,122 @@
 #             logging.error(f"Retrieval failed: {e}")
 #             return []
 
+#-------------------------------------------------Old----------------------------------------------------------------------------------
+# import os
+# os.environ["TRANSFORMERS_OFFLINE"] = "1"
+# os.environ["HF_HOME"] = r"C:\Users\nimish.gupta\OneDrive - ION\Desktop\rag_doc\models"
+# import logging
+# logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+# from sentence_transformers import SentenceTransformer
+# import faiss
+# import numpy as np
+# import json
+# from pathlib import Path
+# from utils.text_utils import get_keyword_frequency, extract_keywords
+# from sklearn.metrics.pairwise import cosine_similarity
+
+# class Retriever:
+#     def __init__(self, model_name, index_path, metadata_dir):
+#         logging.debug(f"Initializing Retriever with model: {model_name}, index_path: {index_path}")
+#         try:
+#             self.model = SentenceTransformer(model_name, local_files_only=True)
+#             #change
+#             self.model = self.model.to("cpu")
+#             self.model.encode(["warmup"], convert_to_tensor=True)
+#             logging.debug("SentenceTransformer loaded successfully")
+#         except Exception as e:
+#             logging.error(f"Failed to load SentenceTransformer: {e}")
+#             raise
+        
+#         self.index_path = index_path
+#         try:
+#             self.index = faiss.read_index(index_path)
+#             logging.debug(f"FAISS index loaded from {index_path}")
+#         except Exception as e:
+#             logging.error(f"Failed to load FAISS index: {e}")
+#             raise
+        
+#         self.metadata_dir = metadata_dir
+#         chunk_mapping_path = Path(index_path).parent / "chunk_mapping.json"
+#         try:
+#             with open(chunk_mapping_path, "r") as f:
+#                 self.chunk_mapping = json.load(f)
+#                 if isinstance(self.chunk_mapping, list):
+#                     logging.warning("Converting list-based chunk_mapping.json to dictionary format")
+#                     self.chunk_mapping = {"chunks": [
+#                         {
+#                             "file": chunk[0],
+#                             "start": chunk[1],
+#                             "end": chunk[2],
+#                             "text": chunk[3],
+#                             "metadata": {}
+#                         } for chunk in self.chunk_mapping if isinstance(chunk, list) and len(chunk) >= 4
+#                     ]}
+#             logging.debug(f"Loaded {len(self.chunk_mapping.get('chunks', []))} chunks from {chunk_mapping_path}")
+#         except Exception as e:
+#             logging.error(f"Failed to load chunk mapping: {e}")
+#             raise
+
+#     def retrieve(self, query, top_k=5, top_docs=3, min_doc_score=0.1):
+#         """
+#         Retrieve top-k chunks from top documents based on query similarity.
+#         Args:
+#             query (str): User query.
+#             top_k (int): Number of chunks to return.
+#             top_docs (int): Number of documents to select.
+#             min_doc_score (float): Minimum similarity score for documents.
+#         Returns:
+#             list: List of chunk texts.
+#         """
+#         try:
+#             # Embed query
+#             query_embedding = self.model.encode([query], show_progress_bar=False)[0].astype('float32')
+#             query_keywords = extract_keywords(query, top_n=10)
+#             logging.debug(f"Encoded query: {query}, keywords: {query_keywords}")
+
+#             # Get document-level similarity
+#             doc_scores = {}
+#             doc_chunks = {}
+#             for i, chunk in enumerate(self.chunk_mapping["chunks"]):
+#                 file_name = chunk["file"]
+#                 chunk_embedding = self.index.reconstruct(i)
+#                 similarity = cosine_similarity([query_embedding], [chunk_embedding])[0][0]
+                
+#                 if file_name not in doc_scores:
+#                     doc_scores[file_name] = []
+#                     doc_chunks[file_name] = []
+#                 doc_scores[file_name].append(similarity)
+#                 doc_chunks[file_name].append((i, chunk, similarity))
+
+#             # Aggregate document scores
+#             for file_name in doc_scores:
+#                 doc_scores[file_name] = max(doc_scores[file_name])  # Use max chunk similarity
+
+#             # Select top documents
+#             sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)[:top_docs]
+#             selected_chunks = []
+#             for file_name, score in sorted_docs:
+#                 if score < min_doc_score:
+#                     continue
+#                 for i, chunk, similarity in doc_chunks[file_name]:
+#                     section_weight = chunk.get("metadata", {}).get("section_weight", 1.0)
+#                     keyword_freq = chunk.get("metadata", {}).get("keyword_freq", {})
+#                     keyword_score = sum(keyword_freq.get(kw, 0) for kw in query_keywords)
+#                     final_score = similarity * section_weight + keyword_score * 0.1
+#                     selected_chunks.append((final_score, chunk["text"]))
+
+#             # Return top-k chunks
+#             selected_chunks = sorted(selected_chunks, key=lambda x: x[0], reverse=True)[:top_k]
+#             return [chunk for _, chunk in selected_chunks]
+#         except Exception as e:
+#             logging.error(f"Error retrieving chunks for query '{query}': {str(e)}")
+#             return []
 
 import os
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["HF_HOME"] = r"C:\Users\nimish.gupta\OneDrive - ION\Desktop\rag_doc\models"
 import logging
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s", filename="log.log")
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
@@ -343,99 +453,104 @@ from pathlib import Path
 from utils.text_utils import get_keyword_frequency, extract_keywords
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 class Retriever:
-    def __init__(self, model_name, index_path, metadata_dir):
-        logging.debug(f"Initializing Retriever with model: {model_name}, index_path: {index_path}")
-        try:
-            self.model = SentenceTransformer(model_name, local_files_only=True)
-            #change
-            self.model = self.model.to("cpu")
-            self.model.encode(["warmup"], convert_to_tensor=True)
-            logging.debug("SentenceTransformer loaded successfully")
-        except Exception as e:
-            logging.error(f"Failed to load SentenceTransformer: {e}")
-            raise
-        
-        self.index_path = index_path
-        try:
-            self.index = faiss.read_index(index_path)
-            logging.debug(f"FAISS index loaded from {index_path}")
-        except Exception as e:
-            logging.error(f"Failed to load FAISS index: {e}")
-            raise
-        
-        self.metadata_dir = metadata_dir
-        chunk_mapping_path = Path(index_path).parent / "chunk_mapping.json"
-        try:
-            with open(chunk_mapping_path, "r") as f:
-                self.chunk_mapping = json.load(f)
-                if isinstance(self.chunk_mapping, list):
-                    logging.warning("Converting list-based chunk_mapping.json to dictionary format")
-                    self.chunk_mapping = {"chunks": [
-                        {
-                            "file": chunk[0],
-                            "start": chunk[1],
-                            "end": chunk[2],
-                            "text": chunk[3],
-                            "metadata": {}
-                        } for chunk in self.chunk_mapping if isinstance(chunk, list) and len(chunk) >= 4
-                    ]}
-            logging.debug(f"Loaded {len(self.chunk_mapping.get('chunks', []))} chunks from {chunk_mapping_path}")
-        except Exception as e:
-            logging.error(f"Failed to load chunk mapping: {e}")
-            raise
+   def __init__(self, model_name, index_path, relevance_model_path=None):
+       logging.debug(f"Initializing Retriever with model: {model_name}, index_path: {index_path}")
+       try:
+           self.model = SentenceTransformer(model_name, local_files_only=True)
+           logging.debug("SentenceTransformer loaded successfully")
+       except Exception as e:
+           logging.error(f"Failed to load SentenceTransformer: {e}")
+           raise
+      
+       self.index_path = index_path
+       try:
+           self.index = faiss.read_index(index_path)
+           logging.debug(f"FAISS index loaded from {index_path}")
+       except Exception as e:
+           logging.error(f"Failed to load FAISS index: {e}")
+           raise
+      
+       chunk_mapping_path = Path(index_path).parent / "chunk_mapping.json"
+       try:
+           with open(chunk_mapping_path, "r") as f:
+               self.chunk_mapping = json.load(f)
+               if isinstance(self.chunk_mapping, list):
+                   logging.warning("Converting list-based chunk_mapping.json to dictionary format")
+                   self.chunk_mapping = {"chunks": [
+                       {
+                           "file": chunk[0],
+                           "start": chunk[1],
+                           "end": chunk[2],
+                           "text": chunk[3],
+                           "metadata": {}
+                       } for chunk in self.chunk_mapping if isinstance(chunk, list) and len(chunk) >= 4
+                   ]}
+           logging.debug(f"Loaded {len(self.chunk_mapping.get('chunks', []))} chunks from {chunk_mapping_path}")
+       except Exception as e:
+           logging.error(f"Failed to load chunk mapping: {e}")
+           raise
 
-    def retrieve(self, query, top_k=5, top_docs=3, min_doc_score=0.1):
-        """
-        Retrieve top-k chunks from top documents based on query similarity.
-        Args:
-            query (str): User query.
-            top_k (int): Number of chunks to return.
-            top_docs (int): Number of documents to select.
-            min_doc_score (float): Minimum similarity score for documents.
-        Returns:
-            list: List of chunk texts.
-        """
-        try:
-            # Embed query
-            query_embedding = self.model.encode([query], show_progress_bar=False)[0].astype('float32')
-            query_keywords = extract_keywords(query, top_n=10)
-            logging.debug(f"Encoded query: {query}, keywords: {query_keywords}")
 
-            # Get document-level similarity
-            doc_scores = {}
-            doc_chunks = {}
-            for i, chunk in enumerate(self.chunk_mapping["chunks"]):
-                file_name = chunk["file"]
-                chunk_embedding = self.index.reconstruct(i)
-                similarity = cosine_similarity([query_embedding], [chunk_embedding])[0][0]
-                
-                if file_name not in doc_scores:
-                    doc_scores[file_name] = []
-                    doc_chunks[file_name] = []
-                doc_scores[file_name].append(similarity)
-                doc_chunks[file_name].append((i, chunk, similarity))
+   def retrieve(self, query, top_k=5, top_docs=3, min_doc_score=0.1):
+       """
+       Retrieve top-k chunks from top documents based on query similarity.
+       Args:
+           query (str): User query.
+           top_k (int): Number of chunks to return.
+           top_docs (int): Number of documents to select.
+           min_doc_score (float): Minimum similarity score for documents.
+       Returns:
+           list: List of chunk texts.
+       """
+       try:
+           # Embed query
+           query_embedding = self.model.encode([query], show_progress_bar=False)[0].astype('float32')
+           query_keywords = extract_keywords(query, top_n=10)
+           logging.debug(f"Encoded query: {query}, keywords: {query_keywords}")
 
-            # Aggregate document scores
-            for file_name in doc_scores:
-                doc_scores[file_name] = max(doc_scores[file_name])  # Use max chunk similarity
 
-            # Select top documents
-            sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)[:top_docs]
-            selected_chunks = []
-            for file_name, score in sorted_docs:
-                if score < min_doc_score:
-                    continue
-                for i, chunk, similarity in doc_chunks[file_name]:
-                    section_weight = chunk.get("metadata", {}).get("section_weight", 1.0)
-                    keyword_freq = chunk.get("metadata", {}).get("keyword_freq", {})
-                    keyword_score = sum(keyword_freq.get(kw, 0) for kw in query_keywords)
-                    final_score = similarity * section_weight + keyword_score * 0.1
-                    selected_chunks.append((final_score, chunk["text"]))
+           # Get document-level similarity
+           doc_scores = {}
+           doc_chunks = {}
+           for i, chunk in enumerate(self.chunk_mapping["chunks"]):
+               file_name = chunk["file"]
+               chunk_embedding = self.index.reconstruct(i)
+               similarity = cosine_similarity([query_embedding], [chunk_embedding])[0][0]
+              
+               if file_name not in doc_scores:
+                   doc_scores[file_name] = []
+                   doc_chunks[file_name] = []
+               doc_scores[file_name].append(similarity)
+               doc_chunks[file_name].append((i, chunk, similarity))
 
-            # Return top-k chunks
-            selected_chunks = sorted(selected_chunks, key=lambda x: x[0], reverse=True)[:top_k]
-            return [chunk for _, chunk in selected_chunks]
-        except Exception as e:
-            logging.error(f"Error retrieving chunks for query '{query}': {str(e)}")
-            return []
+
+           # Aggregate document scores
+           for file_name in doc_scores:
+               doc_scores[file_name] = max(doc_scores[file_name])  # Use max chunk similarity
+
+
+           # Select top documents
+           sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)[:top_docs]
+           selected_chunks = []
+           for file_name, score in sorted_docs:
+               if score < min_doc_score:
+                   continue
+               for i, chunk, similarity in doc_chunks[file_name]:
+                   section_weight = chunk.get("metadata", {}).get("section_weight", 1.0)
+                   keyword_freq = chunk.get("metadata", {}).get("keyword_freq", {})
+                   keyword_score = sum(keyword_freq.get(kw, 0) for kw in query_keywords)
+                   final_score = similarity * section_weight + keyword_score * 0.1
+                   selected_chunks.append((final_score, chunk["text"]))
+
+
+           # Return top-k chunks
+           selected_chunks = sorted(selected_chunks, key=lambda x: x[0], reverse=True)[:top_k]
+           return [chunk for _, chunk in selected_chunks]
+       except Exception as e:
+           logging.error(f"Error retrieving chunks for query '{query}': {str(e)}")
+           return []
+
+
+
